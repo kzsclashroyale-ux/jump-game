@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>Jump & Dash – Gra z Nickiem</title>
+<title>Jump & Dash – Animowany Gracz</title>
 <style>
 body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
 canvas { display: block; background: #87CEEB; }
@@ -164,9 +164,16 @@ function update(){
         player.y+=player.dy;
         if(player.y+player.height>=canvas.height){ player.y=canvas.height-player.height; player.dy=0; player.grounded=true; }
 
-        // --- Rysowanie gracza ---
+        // --- Rysowanie gracza (animacja) ---
+        let stretch = 1;
+        if(!player.grounded) stretch = 1 - player.dy/30;
+        ctx.save();
+        ctx.translate(player.x + player.width/2, player.y + player.height/2);
+        ctx.scale(1, stretch);
         ctx.fillStyle="red";
-        ctx.fillRect(player.x, player.y, player.width, player.height);
+        ctx.fillRect(-player.width/2, -player.height/2, player.width, player.height);
+        ctx.restore();
+
         if(shieldActive){
             ctx.strokeStyle="blue";
             ctx.lineWidth=4;
@@ -183,8 +190,9 @@ function update(){
         for(let i=obstacles.length-1;i>=0;i--){
             let obs = obstacles[i];
             obs.x-=speed;
+            let wave = Math.sin(Date.now()/200 + obs.x/50)*5;
             ctx.fillStyle="green";
-            ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+            ctx.fillRect(obs.x, obs.y - wave, obs.width, obs.height + wave);
 
             if(player.x<obs.x+obs.width && player.x+player.width>obs.x && player.y<obs.y+obs.height && player.y+player.height>obs.y){
                 if(shieldActive){ shieldActive=false; obstacles.splice(i,1); createParticles(player.x+player.width/2, player.y+player.height/2,"0,0,255"); }
@@ -199,17 +207,21 @@ function update(){
             let c = coins[i]; 
             c.x-=speed;
             let yAnim = c.baseY + Math.sin(coinWave + i)*5;
+
+            ctx.save();
+            ctx.translate(c.x+c.size/2, yAnim+c.size/2);
+            ctx.rotate(Date.now()/300 + i);
             ctx.fillStyle="yellow";
             ctx.beginPath();
-            ctx.arc(c.x+c.size/2, yAnim+c.size/2, c.size/2,0,Math.PI*2);
+            ctx.arc(0,0,c.size/2,0,Math.PI*2);
             ctx.fill();
+            ctx.restore();
 
             if(player.x<c.x+c.size && player.x+player.width>c.x && player.y<yAnim+c.size && player.y+player.height>yAnim){
                 coins.splice(i,1);
                 score+=50;
                 createParticles(c.x+c.size/2,yAnim+c.size/2,"255,255,0");
             }
-
             if(c.x+c.size<0) coins.splice(i,1);
         }
 
@@ -228,7 +240,6 @@ function update(){
                 shields.splice(i,1);
                 createParticles(s.x+s.size/2, s.y+s.size/2,"128,0,128");
             }
-
             if(s.x+s.size<0) shields.splice(i,1);
         }
 
@@ -274,7 +285,6 @@ update();
 </script>
 </body>
 </html>
-
 
 
 
